@@ -7,6 +7,13 @@ import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css'
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
 
+import 'bpmn-js-properties-panel/dist/assets/bpmn-js-properties-panel.css' // 右边工具栏样式
+// 这里引入的是右侧属性栏这个框
+import propertiesPanelModule from 'bpmn-js-properties-panel'
+// 而这个引入的是右侧属性栏里的内容
+import propertiesProviderModule from 'bpmn-js-properties-panel/lib/provider/camunda'
+
+
 import customPalette from './components/Palette'
 import paletteEntries from './components/config/paletteEntries'
 
@@ -36,6 +43,14 @@ export default class App extends Component {
       paletteContainer: '#palette',
       paletteEntries,
       additionalModules: [customPalette],
+      //添加控制板
+      propertiesPanel: {
+        parent: '#js-properties-panel'
+      },
+      additionalModules: [
+        propertiesPanelModule,
+        propertiesProviderModule
+      ]
     });
     bpmnModeler.get('canvas').zoom('fit-viewport', 'auto')  //  调整在中间 
     this.getXML(bpmnModeler);
@@ -62,6 +77,7 @@ getXML = async (bpmnModeler) => {
       <div>
         <div id="palette"></div>
         <div id="canvas"></div>
+        <div id="js-properties-panel" className="panel"></div>
       </div>
     )
   }
