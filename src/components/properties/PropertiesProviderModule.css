@@ -12,7 +12,7 @@
 .custom-panel-container .tool-bar {
     padding: 10px 20px;
     background-color: #bbb;
-    position: fixed;
+    /* position: fixed; */
     top: 0;
     left: 50%;
 }
