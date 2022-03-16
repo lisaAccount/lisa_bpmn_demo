@@ -5,18 +5,19 @@ import {
   BpmnInstancesContext,
   initialBpmnInstancesContext,
 } from '../../store/bpmnInstancesContext';
+import TimerTask from './components/timerTask/index'
 
 
-const path = require("path");
-const CustomPropertiesPanelComponents = {};
-const CustomPropertiesPanelComponentsFiles = require.context('./components', true, /\.js$/);
-//  keys()返回components文件夹下所有以.js结尾的文件的文件名,返回文件名组成的数组  fileName为./timerTask/index.js
-CustomPropertiesPanelComponentsFiles.keys().forEach(fileUrl => {
-  const fileName = path.basename(fileUrl, '.js') // 'xxx.js'
-  CustomPropertiesPanelComponents[fileName] = CustomPropertiesPanelComponentsFiles(fileUrl).default || CustomPropertiesPanelComponentsFiles(fileUrl)
-});
+// const path = require("path");
+// const CustomPropertiesPanelComponents = {};
+// const CustomPropertiesPanelComponentsFiles = require.context('./components', true, /\.js$/);
+// //  keys()返回components文件夹下所有以.js结尾的文件的文件名,返回文件名组成的数组  fileName为./timerTask/index.js
+// CustomPropertiesPanelComponentsFiles.keys().forEach(fileUrl => {
+//   const fileName = path.basename(fileUrl, '.js') // 'xxx.js'
+//   CustomPropertiesPanelComponents[fileName] = CustomPropertiesPanelComponentsFiles(fileUrl).default || CustomPropertiesPanelComponentsFiles(fileUrl)
+// });
 
-console.log('CustomPropertiesPanelComponents', CustomPropertiesPanelComponents)
+// console.log('CustomPropertiesPanelComponents', CustomPropertiesPanelComponents)
 
 
 export default class PropertiesProviderModule extends Component {
@@ -26,6 +27,8 @@ export default class PropertiesProviderModule extends Component {
 
   state = {
     bpmnInstancesContext: initialBpmnInstancesContext,
+    xml: '',
+    CurrentPanelComponent: () => null,
   }
 
   componentDidMount() {
@@ -68,22 +71,66 @@ export default class PropertiesProviderModule extends Component {
     // 监听选中的元素和激活的元素
      bpmnModeler.on("element.changed", ({ element }) => {
       console.log("element", element);
+      bpmnModeler.saveXML({format: true}).then((xmlObj, error) => {
+        console.log('xml', xmlObj)
+        this.setState({
+          xml: xmlObj.xml
+        })
+      })
+      this.handleFormChangedData(element)
     });
-    bpmnModeler.on("selection.changed", selectedElement => {
-      console.log("element", selectedElement);
-    });
+
+    // bpmnModeler.on("selection.changed", ({newSelection}) => {
+    //   console.log("element", newSelection);
+    //   const selectionBpmnElement = newSelection[0];
+    //   const panelName = selectionBpmnElement?.id?.split('_')[0] || '';
+    //   this.setState({
+    //     CurrentPanelComponent: CustomPropertiesPanelComponents[panelName] || (() => null),
+    //   })
+
+    //   this.initFormOnChanged(selectionBpmnElement || null);
+    // });
   }
 
   handleFormChangedData = (element) => {
     console.log('我是选中的元素')
+    const { bpmnInstancesContext: { elementRegistry}} = this.state.bpmnInstancesContext
+    if(!element) return;
+
+    const bpmnElement = element;
+    const elementId = element.id;
+    const elementType = element.type.split(":")[1] || "";
+    const elementBusinessObject = JSON.parse(JSON.stringify(element.businessObject))
+    
+    const elementInfo = {
+      bpmnElement,
+      elementId,
+      elementType,
+      elementBusinessObject
+    }
+
+    this.setState({
+      bpmnInstancesContext: {
+        ...BpmnInstancesContext,
+        elementInfo,
+      }
+    })
   }
 
   render() {
+    const {
+      bpmnInstancesContext,
+      bpmnInstancesContext: {
+        elementInfo: { elementBusinessObject },
+      },
+      CurrentPanelComponent
+    } = this.state;
     return (
       <div className='custom-panel-container'>
         <div className='custom-panel-main'>
-          <BpmnInstancesContext.Provider value={initialBpmnInstancesContext}>
-
+          <BpmnInstancesContext.Provider value={bpmnInstancesContext}>
+            {/* <CurrentPanelComponent elementBusinessObject={elementBusinessObject} /> */}
+            <TimerTask elementBusinessObject={elementBusinessObject} />
           </BpmnInstancesContext.Provider>
         </div>
       </div>

@@ -10,6 +10,12 @@ const initialBpmnInstancesContext = {
     elementRegistry: {},
     replace: {},
     selection: {},
+    elementInfo: {
+        bpmnElement: {},
+        elementId: null,
+        elementType: "",
+        elementBusinessObject: {},
+    },
 }
 
 const BpmnInstancesContext = createContext(initialBpmnInstancesContext)
