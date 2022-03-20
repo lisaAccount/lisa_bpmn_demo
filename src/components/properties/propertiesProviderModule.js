@@ -5,19 +5,19 @@ import {
   BpmnInstancesContext,
   initialBpmnInstancesContext,
 } from '../../store/bpmnInstancesContext';
-import TimerTask from './components/timerTask/index'
+import TimerTask from './components/timerTask/timerTask'
 
 
-// const path = require("path");
-// const CustomPropertiesPanelComponents = {};
-// const CustomPropertiesPanelComponentsFiles = require.context('./components', true, /\.js$/);
-// //  keys()返回components文件夹下所有以.js结尾的文件的文件名,返回文件名组成的数组  fileName为./timerTask/index.js
-// CustomPropertiesPanelComponentsFiles.keys().forEach(fileUrl => {
-//   const fileName = path.basename(fileUrl, '.js') // 'xxx.js'
-//   CustomPropertiesPanelComponents[fileName] = CustomPropertiesPanelComponentsFiles(fileUrl).default || CustomPropertiesPanelComponentsFiles(fileUrl)
-// });
+const path = require("path");
+const CustomPropertiesPanelComponents = {};
+const CustomPropertiesPanelComponentsFiles = require.context('./components', true, /\.js$/);
+//  keys()返回components文件夹下所有以.js结尾的文件的文件名,返回文件名组成的数组  fileName为./timerTask/index.js
+CustomPropertiesPanelComponentsFiles.keys().forEach(fileUrl => {
+  const fileName = path.basename(fileUrl, '.js') // 'xxx.js'
+  CustomPropertiesPanelComponents[fileName] = CustomPropertiesPanelComponentsFiles(fileUrl).default || CustomPropertiesPanelComponentsFiles(fileUrl)
+});
 
-// console.log('CustomPropertiesPanelComponents', CustomPropertiesPanelComponents)
+console.log('CustomPropertiesPanelComponents', CustomPropertiesPanelComponents)
 
 
 export default class PropertiesProviderModule extends Component {
@@ -64,14 +64,14 @@ export default class PropertiesProviderModule extends Component {
   };
 
   getActiveElement = () => {
-    const {bpmnModeler} = this.props;
+    const { bpmnModeler } = this.props;
     //初始选中process面板
     this.handleFormChangedData(null);
 
     // 监听选中的元素和激活的元素
-     bpmnModeler.on("element.changed", ({ element }) => {
+    bpmnModeler.on("element.changed", ({ element }) => {
       console.log("element", element);
-      bpmnModeler.saveXML({format: true}).then((xmlObj, error) => {
+      bpmnModeler.saveXML({ format: true }).then((xmlObj, error) => {
         console.log('xml', xmlObj)
         this.setState({
           xml: xmlObj.xml
@@ -80,28 +80,37 @@ export default class PropertiesProviderModule extends Component {
       this.handleFormChangedData(element)
     });
 
-    // bpmnModeler.on("selection.changed", ({newSelection}) => {
-    //   console.log("element", newSelection);
-    //   const selectionBpmnElement = newSelection[0];
-    //   const panelName = selectionBpmnElement?.id?.split('_')[0] || '';
-    //   this.setState({
-    //     CurrentPanelComponent: CustomPropertiesPanelComponents[panelName] || (() => null),
-    //   })
+    bpmnModeler.on("selection.changed", ({ newSelection }) => {
+      console.log("element", newSelection);
+      const selectionBpmnElement = newSelection[0];
+      const panelName = selectionBpmnElement?.id?.split('_')[0] || '';
+      this.setState({
+        CurrentPanelComponent: CustomPropertiesPanelComponents[panelName] || (() => null),
+      })
 
-    //   this.initFormOnChanged(selectionBpmnElement || null);
-    // });
+      this.handleFormChangedData(selectionBpmnElement || null);
+    });
   }
 
   handleFormChangedData = (element) => {
-    console.log('我是选中的元素')
-    const { bpmnInstancesContext: { elementRegistry}} = this.state.bpmnInstancesContext
-    if(!element) return;
+    console.log('element11', element)
+    let activatedElement;
+    console.log('this.state.bpmnInstancesContext', this.state.bpmnInstancesContext)
+    const { bpmnInstancesContext: { elementRegistry } } = this.state;
+    if (!element) {
+      // 寻找初始化选中元素 bpmn:Process
+      console.log('element11', elementRegistry)
+      activatedElement =
+        elementRegistry.find(el => el.type === "bpmn:Process") ??
+        elementRegistry.find(el => el.type === "bpmn:Collaboration");
+    }
+    if (!activatedElement) return;
 
-    const bpmnElement = element;
-    const elementId = element.id;
-    const elementType = element.type.split(":")[1] || "";
-    const elementBusinessObject = JSON.parse(JSON.stringify(element.businessObject))
-    
+    const bpmnElement = activatedElement;
+    const elementId = activatedElement.id;
+    const elementType = activatedElement.type.split(":")[1] || "";
+    const elementBusinessObject = JSON.parse(JSON.stringify(activatedElement.businessObject)) //  深克隆
+
     const elementInfo = {
       bpmnElement,
       elementId,
@@ -129,8 +138,7 @@ export default class PropertiesProviderModule extends Component {
       <div className='custom-panel-container'>
         <div className='custom-panel-main'>
           <BpmnInstancesContext.Provider value={bpmnInstancesContext}>
-            {/* <CurrentPanelComponent elementBusinessObject={elementBusinessObject} /> */}
-            <TimerTask elementBusinessObject={elementBusinessObject} />
+            <CurrentPanelComponent elementBusinessObject={elementBusinessObject} />
           </BpmnInstancesContext.Provider>
         </div>
       </div>

@@ -15,7 +15,7 @@ import propertiesPanelModule from 'bpmn-js-properties-panel'
 import PropertiesProviderModule from './components/properties/propertiesProviderModule'
 
 
-import customPalette from './components/Palette'
+import customPalette from './components/palette'
 import paletteEntries from './components/config/paletteEntries'
 
 export default class App extends Component {
@@ -81,7 +81,7 @@ getXML = async (bpmnModeler) => {
         <div id="js-properties-panel" className="panel">
           没东西吗
         </div>
-        <PropertiesProviderModule></PropertiesProviderModule>
+        <PropertiesProviderModule bpmnModeler={this.state.bpmnModeler}></PropertiesProviderModule>
       </div>
     )
   }
